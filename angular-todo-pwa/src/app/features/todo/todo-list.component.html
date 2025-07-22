@@ -1,0 +1,118 @@
+<div class="todo-container" [ngClass]="deviceService.cssClasses">
+  <header class="todo-header">
+    <h1>Todo List</h1>
+    <div class="device-info">
+      <span class="device-badge">{{ deviceService.deviceInfo().deviceType | titlecase }}</span>
+      <span class="screen-badge">{{ deviceService.deviceInfo().screenSize | titlecase }}</span>
+    </div>
+  </header>
+
+  <div class="add-todo-section">
+    <div class="input-group">
+      <input
+        type="text"
+        [(ngModel)]="newTodoText"
+        (keyup.enter)="addTodo()"
+        placeholder="Add a new todo..."
+        class="todo-input"
+      />
+      <button 
+        (click)="addTodo()" 
+        [disabled]="!newTodoText().trim()"
+        class="add-button"
+      >
+        Add
+      </button>
+    </div>
+  </div>
+
+  <div class="todo-stats">
+    <div class="stat-item">
+      <span class="stat-number">{{ todoService.pendingCount() }}</span>
+      <span class="stat-label">Pending</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-number">{{ todoService.completedCount() }}</span>
+      <span class="stat-label">Completed</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-number">{{ todoService.totalCount() }}</span>
+      <span class="stat-label">Total</span>
+    </div>
+  </div>
+
+  <div class="todo-sections">
+    <!-- Pending Todos -->
+    <div class="todo-section" *ngIf="todoService.pendingTodos().length > 0">
+      <h3 class="section-title">Pending Tasks</h3>
+      <div class="todo-list">
+        <div
+          *ngFor="let todo of todoService.pendingTodos()"
+          class="todo-item pending"
+        >
+          <div class="todo-content">
+            <input
+              type="checkbox"
+              [checked]="todo.completed"
+              (change)="toggleTodo(todo.id)"
+              class="todo-checkbox"
+            />
+            <span class="todo-text">{{ todo.text }}</span>
+            <span class="todo-date">{{ todo.createdAt | date:'short' }}</span>
+          </div>
+          <button 
+            (click)="deleteTodo(todo.id)" 
+            class="delete-button"
+            aria-label="Delete todo"
+          >
+            ×
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Completed Todos -->
+    <div class="todo-section" *ngIf="todoService.completedTodos().length > 0">
+      <div class="section-header">
+        <h3 class="section-title">Completed Tasks</h3>
+        <button
+          (click)="clearCompleted()"
+          class="clear-button"
+        >
+          Clear All
+        </button>
+      </div>
+      <div class="todo-list">
+        <div
+          *ngFor="let todo of todoService.completedTodos()"
+          class="todo-item completed"
+        >
+          <div class="todo-content">
+            <input
+              type="checkbox"
+              [checked]="todo.completed"
+              (change)="toggleTodo(todo.id)"
+              class="todo-checkbox"
+            />
+            <span class="todo-text">{{ todo.text }}</span>
+            <span class="todo-date">{{ todo.createdAt | date:'short' }}</span>
+          </div>
+          <button 
+            (click)="deleteTodo(todo.id)" 
+            class="delete-button"
+            aria-label="Delete todo"
+          >
+            ×
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="todoService.totalCount() === 0">
+    <div class="empty-icon">📝</div>
+    <h3>No todos yet!</h3>
+    <p>Add your first todo above to get started.</p>
+  </div>
+</div>

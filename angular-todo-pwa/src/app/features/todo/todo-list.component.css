@@ -1,0 +1,365 @@
+/* Base styles */
+.todo-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  color: #333;
+}
+
+.todo-header {
+  text-align: center;
+  margin-bottom: 30px;
+  color: white;
+}
+
+.todo-header h1 {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.device-info {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.device-badge, .screen-badge {
+  background: rgba(255,255,255,0.2);
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  backdrop-filter: blur(10px);
+}
+
+.add-todo-section {
+  background: white;
+  border-radius: 15px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+}
+
+.input-group {
+  display: flex;
+  gap: 10px;
+}
+
+.todo-input {
+  flex: 1;
+  padding: 12px 16px;
+  border: 2px solid #e1e5e9;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.3s ease;
+}
+
+.todo-input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.add-button {
+  padding: 12px 24px;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.add-button:hover:not(:disabled) {
+  background: #5a6fd8;
+}
+
+.add-button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.todo-stats {
+  display: flex;
+  justify-content: space-around;
+  background: white;
+  border-radius: 15px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-number {
+  display: block;
+  font-size: 2rem;
+  font-weight: bold;
+  color: #667eea;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.todo-section {
+  background: white;
+  border-radius: 15px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.section-title {
+  margin: 0 0 15px 0;
+  color: #333;
+  font-size: 1.3rem;
+}
+
+.clear-button {
+  padding: 8px 16px;
+  background: #ff6b6b;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.clear-button:hover {
+  background: #ff5252;
+}
+
+.todo-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.todo-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.todo-item.pending {
+  background: #f8f9ff;
+  border-left: 4px solid #667eea;
+}
+
+.todo-item.completed {
+  background: #f0f8f0;
+  border-left: 4px solid #4caf50;
+}
+
+.todo-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.todo-checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.todo-text {
+  flex: 1;
+  font-size: 1rem;
+}
+
+.completed .todo-text {
+  text-decoration: line-through;
+  color: #666;
+}
+
+.todo-date {
+  font-size: 0.8rem;
+  color: #999;
+}
+
+.delete-button {
+  background: #ff6b6b;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.3s ease;
+}
+
+.delete-button:hover {
+  background: #ff5252;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+}
+
+.empty-icon {
+  font-size: 4rem;
+  margin-bottom: 20px;
+}
+
+.empty-state h3 {
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.empty-state p {
+  color: #666;
+}
+
+/* Mobile Device Styles */
+.device-mobile {
+  padding: 10px;
+}
+
+.device-mobile .todo-header h1 {
+  font-size: 2rem;
+}
+
+.device-mobile .input-group {
+  flex-direction: column;
+}
+
+.device-mobile .add-button {
+  width: 100%;
+}
+
+.device-mobile .todo-stats {
+  flex-direction: column;
+  gap: 15px;
+}
+
+.device-mobile .stat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.device-mobile .stat-number {
+  font-size: 1.5rem;
+}
+
+.device-mobile .todo-item {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.device-mobile .todo-content {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.device-mobile .delete-button {
+  align-self: flex-end;
+}
+
+/* Tablet Device Styles */
+.device-tablet .todo-container {
+  padding: 25px;
+}
+
+.device-tablet .todo-header h1 {
+  font-size: 2.2rem;
+}
+
+.device-tablet .todo-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+/* Desktop Device Styles */
+.device-desktop .todo-sections {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.device-desktop .todo-item {
+  padding: 20px;
+}
+
+.device-desktop .todo-text {
+  font-size: 1.1rem;
+}
+
+/* Screen Size Specific Styles */
+.screen-small {
+  font-size: 14px;
+}
+
+.screen-small .todo-header h1 {
+  font-size: 1.8rem;
+}
+
+.screen-medium {
+  font-size: 15px;
+}
+
+.screen-large {
+  font-size: 16px;
+}
+
+.screen-large .todo-container {
+  max-width: 1200px;
+}
+
+/* Responsive breakpoints */
+@media (max-width: 767px) {
+  .todo-sections {
+    display: block !important;
+  }
+  
+  .section-header {
+    flex-direction: column;
+    gap: 10px;
+    align-items: stretch;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .todo-stats {
+    display: flex;
+    justify-content: space-around;
+  }
+}
+
+@media (min-width: 1024px) {
+  .todo-container {
+    padding: 40px;
+  }
+}
