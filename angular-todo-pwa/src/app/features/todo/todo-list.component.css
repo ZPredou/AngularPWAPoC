@@ -1,4 +1,8 @@
 /* Base styles */
+.page-container {
+  min-width:100%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
 .todo-container {
   max-width: 800px;
   margin: 0 auto;
@@ -34,6 +38,55 @@
   border-radius: 20px;
   font-size: 0.8rem;
   backdrop-filter: blur(10px);
+}
+
+.pwa-install-section {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.pwa-install-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #2563eb;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  padding: 12px 24px;
+  border-radius: 25px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.pwa-install-button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 1);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.pwa-install-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.pwa-install-button svg {
+  transition: transform 0.3s ease;
+}
+
+.pwa-install-button:hover:not(:disabled) svg {
+  transform: translateY(-1px);
+}
+
+.install-hint {
+  margin: 8px 0 0 0;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.8);
+  font-style: italic;
 }
 
 .add-todo-section {
@@ -233,6 +286,34 @@
 .empty-state h3 {
   color: #333;
   margin-bottom: 10px;
+}
+
+.loading-state {
+  text-align: center;
+  padding: 60px 20px;
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-state p {
+  color: #666;
+  margin: 0;
 }
 
 .empty-state p {

@@ -1,4 +1,4 @@
-import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZonelessChangeDetection, isDevMode } from '@angular/core';
+import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZonelessChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { DeviceDetectorService } from 'ngx-device-detector';
 
@@ -11,7 +11,7 @@ export const appConfig: ApplicationConfig = {
     provideZonelessChangeDetection(),
     provideRouter(routes),
     provideServiceWorker('ngsw-worker.js', {
-            enabled: !isDevMode(),
+            enabled: true, // Enable in development for push notification testing
             registrationStrategy: 'registerWhenStable:30000'
           }),
     DeviceDetectorService

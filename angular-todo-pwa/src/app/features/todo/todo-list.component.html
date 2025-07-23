@@ -1,11 +1,34 @@
+
+<div class="page-container">
 <div class="todo-container" [ngClass]="deviceService.cssClasses">
   <header class="todo-header">
-    <h1>Todo List</h1>
+    <h1>Todo PWA</h1>
     <div class="device-info">
       <span class="device-badge">{{ deviceService.deviceInfo().deviceType | titlecase }}</span>
       <span class="screen-badge">{{ deviceService.deviceInfo().screenSize | titlecase }}</span>
     </div>
+
+    <!-- PWA Install Button -->
+    <div class="pwa-install-section" *ngIf="shouldShowInstallButton()">
+      <button
+        class="pwa-install-button"
+        (click)="installPWA()"
+        [disabled]="isInstallingPWA()"
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" fill="currentColor"/>
+        </svg>
+        {{ isInstallingPWA() ? 'Installing...' : 'Install App' }}
+      </button>
+      <p class="install-hint">{{ getInstallHint() }}</p>
+    </div>
   </header>
+
+  <!-- PWA Status Component -->
+  <app-pwa-status></app-pwa-status>
+
+  <!-- Push Notifications Component -->
+  <app-push-notifications></app-push-notifications>
 
   <div class="add-todo-section">
     <div class="input-group">
@@ -16,12 +39,12 @@
         placeholder="Add a new todo..."
         class="todo-input"
       />
-      <button 
-        (click)="addTodo()" 
-        [disabled]="!newTodoText().trim()"
+      <button
+        (click)="addTodo()"
+        [disabled]="!newTodoText().trim() || isProcessing() || todoService.isLoading()"
         class="add-button"
       >
-        Add
+        {{ isProcessing() ? 'Adding...' : 'Add' }}
       </button>
     </div>
   </div>
@@ -77,9 +100,10 @@
         <h3 class="section-title">Completed Tasks</h3>
         <button
           (click)="clearCompleted()"
+          [disabled]="isProcessing() || todoService.isLoading()"
           class="clear-button"
         >
-          Clear All
+          {{ isProcessing() ? 'Clearing...' : 'Clear All' }}
         </button>
       </div>
       <div class="todo-list">
@@ -110,9 +134,17 @@
   </div>
 
   <!-- Empty State -->
-  <div class="empty-state" *ngIf="todoService.totalCount() === 0">
+  <div class="empty-state" *ngIf="todoService.totalCount() === 0 && !todoService.isLoading()">
     <div class="empty-icon">📝</div>
     <h3>No todos yet!</h3>
     <p>Add your first todo above to get started.</p>
   </div>
+
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="todoService.isLoading()">
+    <div class="loading-spinner"></div>
+    <p>Loading your todos...</p>
+  </div>
+
+</div>
 </div>
