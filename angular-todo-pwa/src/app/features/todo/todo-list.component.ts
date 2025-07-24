@@ -105,7 +105,6 @@ export class TodoListComponent implements OnInit {
       const installed = await this.pwaInstallService.showInstallPrompt();
       if (!installed) {
         // If the native prompt failed or was dismissed, show instructions
-        console.log('Install prompt was dismissed or failed');
       }
     } catch (error) {
       console.error('Error installing PWA:', error);

@@ -34,7 +34,6 @@ export class IndexedDBStorageService implements StorageService {
 
       request.onsuccess = () => {
         this.db = request.result;
-        console.log('IndexedDB initialized successfully');
         resolve();
       };
 
@@ -46,7 +45,6 @@ export class IndexedDBStorageService implements StorageService {
           const store = db.createObjectStore(this.storeName, { keyPath: 'id' });
           store.createIndex('completed', 'completed', { unique: false });
           store.createIndex('createdAt', 'createdAt', { unique: false });
-          console.log('Object store created');
         }
       };
     });

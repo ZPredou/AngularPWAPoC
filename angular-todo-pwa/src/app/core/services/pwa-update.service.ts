@@ -33,7 +33,6 @@ export class PwaUpdateService {
 
   private initializeUpdateChecking(): void {
     if (!this.swUpdate.isEnabled) {
-      console.log('Service Worker updates are not enabled');
       return;
     }
 
@@ -47,7 +46,6 @@ export class PwaUpdateService {
         }))
       )
       .subscribe(({ current, available }) => {
-        console.log('Update available:', { current, available });
         this.updateStatus.update(status => ({
           ...status,
           updateAvailable: true,

@@ -1,5 +1,6 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { SwPush } from '@angular/service-worker';
+import { firstValueFrom } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 
 export interface PushNotificationState {
@@ -71,6 +72,8 @@ export class PushNotificationService {
   constructor() {
     this.initializeService();
     this.setupMessageHandlers();
+    // Disable auto-subscribe for now - let user manually subscribe
+    // this.autoSubscribeIfPermissionGranted();
   }
 
   private initializeService(): void {
@@ -451,22 +454,72 @@ export class PushNotificationService {
     }
 
     try {
+      console.log('🔄 Starting subscription process...');
+
       // Check if already subscribed
       const currentSubscription = this.subscription();
       if (currentSubscription) {
+        console.log('✅ Already subscribed, ensuring server knows about it...');
+        // Make sure the server knows about this subscription
+        await this.sendSubscriptionToServer(currentSubscription);
         return currentSubscription;
       }
 
-      const subscription = await this.swPush.requestSubscription({
+      console.log('📱 Requesting new subscription from browser...');
+      console.log('🔍 Service worker isEnabled:', this.swPush.isEnabled);
+      console.log('🔍 Service worker subscription observable:', this.swPush.subscription);
+
+      // First, unsubscribe from any existing subscription to avoid conflicts
+      console.log('🧹 Clearing any existing subscriptions...');
+      try {
+        await this.swPush.unsubscribe();
+        console.log('✅ Existing subscription cleared');
+      } catch (error) {
+        console.log('ℹ️ No existing subscription to clear');
+      }
+
+      // Wait for service worker to be ready
+      await this.waitForServiceWorker();
+
+      // Wait a bit more for service worker to stabilize
+      console.log('⏳ Waiting for service worker to stabilize...');
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      console.log('✅ Service worker is ready, requesting subscription...');
+      console.log('🔑 Using VAPID key:', serverPublicKey.trim());
+
+      // Add timeout to prevent hanging
+      const subscriptionPromise = this.swPush.requestSubscription({
         serverPublicKey: serverPublicKey.trim()
       });
 
+      console.log('⏳ Subscription promise created, waiting for response...');
+
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => {
+          console.error('⏰ Subscription request timed out after 5 seconds');
+          reject(new Error('Subscription request timed out after 5 seconds. This usually means the browser is not ready for push subscriptions. Try refreshing the page and ensuring notifications are enabled in your browser settings.'));
+        }, 5000);
+      });
+
+      console.log('🏁 Racing subscription vs timeout...');
+      const subscription = await Promise.race([subscriptionPromise, timeoutPromise]) as PushSubscription;
+      console.log('🎯 Promise race completed!');
+
+      console.log('✅ Browser subscription created:', subscription);
+
+      // Send subscription to the push server
+      console.log('📡 Sending subscription to server...');
+      await this.sendSubscriptionToServer(subscription);
+
+      console.log('✅ Updating local state...');
       this.updateState({
         subscription,
         isEnabled: true,
         lastError: null
       });
 
+      console.log('🎉 Subscription process completed successfully!');
       return subscription;
     } catch (error) {
       if (this.isNetworkError(error)) {
@@ -481,10 +534,14 @@ export class PushNotificationService {
 
   async unsubscribe(): Promise<void> {
     try {
-      if (!this.subscription()) {
+      const currentSubscription = this.subscription();
+      if (!currentSubscription) {
         // Already unsubscribed
         return;
       }
+
+      // Remove subscription from server first
+      await this.removeSubscriptionFromServer(currentSubscription);
 
       await this.swPush.unsubscribe();
       this.updateState({
@@ -503,6 +560,62 @@ export class PushNotificationService {
     }
   }
 
+  // Send subscription to push server
+  private async sendSubscriptionToServer(subscription: PushSubscription): Promise<void> {
+    console.log('📤 Sending subscription to server:', subscription);
+
+    try {
+      // Convert subscription to JSON format that the server expects
+      const subscriptionJSON = subscription.toJSON();
+      console.log('📤 Subscription JSON to send:', subscriptionJSON);
+
+      const response = await fetch('http://localhost:3000/subscribe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(subscriptionJSON)
+      });
+
+      console.log('📡 Server response status:', response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ Server error response:', errorText);
+        throw new Error(`Server responded with ${response.status}: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log('✅ Subscription sent to server successfully:', result);
+    } catch (error) {
+      console.error('❌ Failed to send subscription to server:', error);
+      throw new Error(`Failed to register subscription with server: ${this.getErrorMessage(error)}`);
+    }
+  }
+
+  // Remove subscription from push server
+  private async removeSubscriptionFromServer(subscription: PushSubscription): Promise<void> {
+    try {
+      const response = await fetch('http://localhost:3000/unsubscribe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(subscription)
+      });
+
+      if (!response.ok) {
+        throw new Error(`Server responded with ${response.status}: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log('✅ Subscription removed from server:', result);
+    } catch (error) {
+      console.error('❌ Failed to remove subscription from server:', error);
+      // Don't throw here - we still want to unsubscribe locally even if server fails
+    }
+  }
+
   // Fallback notification system for when push notifications fail
   showFallbackNotification(title: string, body: string, data?: any): void {
     // Create an in-app notification element
@@ -511,7 +624,6 @@ export class PushNotificationService {
     notification.innerHTML = `
       <div class="fallback-notification-content">
         <div class="fallback-notification-header">
-          <span class="fallback-notification-icon">🔔</span>
           <strong class="fallback-notification-title">${title}</strong>
           <button class="fallback-notification-close" onclick="this.parentElement.parentElement.parentElement.remove()">×</button>
         </div>
@@ -643,6 +755,68 @@ export class PushNotificationService {
   // Clear last error
   clearError(): void {
     this.updateState({ lastError: null });
+  }
+
+  // Auto-subscribe if permission is already granted
+  private async autoSubscribeIfPermissionGranted(): Promise<void> {
+    // Wait a bit for the service to initialize
+    setTimeout(async () => {
+      try {
+        if (this.hasPermission() && !this.isEnabled()) {
+          const vapidKey = await this.getVapidKeyFromServer();
+          if (vapidKey) {
+            await this.subscribe(vapidKey);
+          }
+        }
+      } catch (error) {
+        // Silently fail - this is just a convenience feature
+        console.log('Auto-subscribe failed:', error);
+      }
+    }, 1000);
+  }
+
+  // Get VAPID key from the push server
+  private async getVapidKeyFromServer(): Promise<string | null> {
+    try {
+      const response = await fetch('http://localhost:3000/vapid-public-key');
+      if (!response.ok) {
+        throw new Error(`Server responded with ${response.status}`);
+      }
+      const data = await response.json();
+      return data.publicKey;
+    } catch (error) {
+      console.error('Failed to get VAPID key from server:', error);
+      return null;
+    }
+  }
+
+  // Public method to get VAPID key (for UI)
+  async getVapidKey(): Promise<string | null> {
+    return this.getVapidKeyFromServer();
+  }
+
+  // Wait for service worker to be ready
+  private async waitForServiceWorker(): Promise<void> {
+    if (this.swPush.isEnabled) {
+      return; // Already ready
+    }
+
+    console.log('⏳ Waiting for service worker to be ready...');
+
+    // Wait up to 30 seconds for service worker to be ready
+    const maxWaitTime = 30000;
+    const checkInterval = 500;
+    const startTime = Date.now();
+
+    while (!this.swPush.isEnabled && (Date.now() - startTime) < maxWaitTime) {
+      await new Promise(resolve => setTimeout(resolve, checkInterval));
+    }
+
+    if (!this.swPush.isEnabled) {
+      throw new Error('Service Worker failed to initialize within 30 seconds');
+    }
+
+    console.log('✅ Service worker is now ready!');
   }
 
   // Utility methods for creating specific notification types

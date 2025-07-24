@@ -57,9 +57,6 @@ app.post('/subscribe', (req, res) => {
   // Add subscription to our store
   subscriptions.add(JSON.stringify(subscription));
   
-  console.log('New subscription added:', subscription.endpoint);
-  console.log('Total subscriptions:', subscriptions.size);
-  
   res.status(201).json({
     message: 'Subscription added successfully'
   });
@@ -80,8 +77,6 @@ app.post('/unsubscribe', (req, res) => {
   const deleted = subscriptions.delete(subscriptionString);
   
   if (deleted) {
-    console.log('Subscription removed:', subscription.endpoint);
-    console.log('Total subscriptions:', subscriptions.size);
     res.json({ message: 'Subscription removed successfully' });
   } else {
     res.status(404).json({ error: 'Subscription not found' });
@@ -111,7 +106,6 @@ app.post('/send-notification', async (req, res) => {
       }
     }));
 
-    console.log('Notification sent successfully');
     res.json({ message: 'Notification sent successfully' });
   } catch (error) {
     console.error('Error sending notification:', error);
@@ -171,8 +165,6 @@ app.post('/send-to-all', async (req, res) => {
     const successful = results.filter(r => r.success).length;
     const failed = results.filter(r => !r.success).length;
 
-    console.log(`Broadcast sent: ${successful} successful, ${failed} failed`);
-    console.log('Remaining subscriptions:', subscriptions.size);
 
     res.json({
       message: 'Broadcast completed',

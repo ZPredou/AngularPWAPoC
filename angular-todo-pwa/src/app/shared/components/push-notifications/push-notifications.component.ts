@@ -57,23 +57,39 @@ import { PushNotificationService } from '../../../core/services/push-notificatio
               <p class="info-text">
                 Subscribe to receive push notifications from the server.
               </p>
-              <div class="vapid-input">
-                <label for="vapidKey">Server Public Key (VAPID):</label>
-                <input 
-                  id="vapidKey"
-                  type="text" 
-                  [(ngModel)]="vapidKey"
-                  placeholder="Enter VAPID public key..."
-                  class="form-input"
-                >
-              </div>
-              <button 
-                class="btn btn-primary"
-                (click)="subscribe()"
-                [disabled]="isLoading() || !vapidKey()"
-              >
-                {{ isLoading() ? 'Subscribing...' : '📡 Subscribe' }}
-              </button>
+
+              @if (vapidKey()) {
+                <div class="auto-subscribe">
+                  <p class="success-text">✅ VAPID key loaded automatically from server</p>
+                  <button
+                    class="btn btn-primary btn-large"
+                    (click)="subscribe()"
+                    [disabled]="isLoading()"
+                  >
+                    {{ isLoading() ? 'Subscribing...' : '📡 Subscribe to Notifications' }}
+                  </button>
+                </div>
+              } @else {
+                <div class="manual-vapid">
+                  <div class="vapid-input">
+                    <label for="vapidKey">Server Public Key (VAPID):</label>
+                    <input
+                      id="vapidKey"
+                      type="text"
+                      [(ngModel)]="vapidKey"
+                      placeholder="Loading VAPID key from server..."
+                      class="form-input"
+                    >
+                  </div>
+                  <button
+                    class="btn btn-primary"
+                    (click)="subscribe()"
+                    [disabled]="isLoading() || !vapidKey()"
+                  >
+                    {{ isLoading() ? 'Subscribing...' : '📡 Subscribe' }}
+                  </button>
+                </div>
+              }
             </div>
           } @else {
             <div class="subscribed-section">
@@ -109,6 +125,14 @@ import { PushNotificationService } from '../../../core/services/push-notificatio
                   [disabled]="isLoading()"
                 >
                   ⏰ Delayed Test (5s)
+                </button>
+
+                <button
+                  class="btn btn-info"
+                  (click)="debugNotificationSettings()"
+                  [disabled]="isLoading()"
+                >
+                  🔍 Debug Settings
                 </button>
                 <button
                   class="btn btn-danger"
@@ -282,6 +306,28 @@ import { PushNotificationService } from '../../../core/services/push-notificatio
       line-height: 1.5;
     }
 
+    .success-text {
+      color: #155724;
+      margin-bottom: 16px;
+      font-weight: 600;
+      line-height: 1.5;
+    }
+
+    .auto-subscribe {
+      text-align: center;
+      padding: 20px;
+      background: #d4edda;
+      border: 1px solid #c3e6cb;
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+
+    .btn-large {
+      padding: 16px 32px;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
     .btn {
       padding: 12px 24px;
       border: none;
@@ -323,6 +369,15 @@ import { PushNotificationService } from '../../../core/services/push-notificatio
 
     .btn-danger:hover:not(:disabled) {
       background: #c82333;
+    }
+
+    .btn-info {
+      background: #17a2b8;
+      color: white;
+    }
+
+    .btn-info:hover:not(:disabled) {
+      background: #138496;
     }
 
     .warning-message,
@@ -564,6 +619,21 @@ export class PushNotificationsComponent {
   readonly showInstructions = signal(false);
   readonly vapidKey = signal('');
 
+  constructor() {
+    this.loadVapidKey();
+  }
+
+  private async loadVapidKey(): Promise<void> {
+    try {
+      const key = await this.pushService.getVapidKey();
+      if (key) {
+        this.vapidKey.set(key);
+      }
+    } catch (error) {
+      // Silently fail
+    }
+  }
+
   getStatusClass(): string {
     if (!this.pushService.isSupported()) return 'unsupported';
     return this.pushService.permission();
@@ -653,8 +723,67 @@ export class PushNotificationsComponent {
   getSubscriptionEndpoint(): string {
     const subscription = this.pushService.subscription();
     if (!subscription) return '';
-    
+
     const endpoint = subscription.endpoint;
     return endpoint.length > 50 ? endpoint.substring(0, 50) + '...' : endpoint;
+  }
+
+  debugNotificationSettings(): void {
+    const debugInfo = {
+      // Browser support
+      notificationSupported: 'Notification' in window,
+      serviceWorkerSupported: 'serviceWorker' in navigator,
+
+      // Permissions
+      notificationPermission: Notification.permission,
+
+      // Document state
+      documentVisibility: document.visibilityState,
+      documentHasFocus: document.hasFocus(),
+
+      // User agent
+      userAgent: navigator.userAgent,
+
+      // Service state
+      pushServiceSupported: this.pushService.isSupported(),
+      pushServiceEnabled: this.pushService.isEnabled(),
+      pushServicePermission: this.pushService.permission(),
+
+      // URL and protocol
+      currentURL: window.location.href,
+      protocol: window.location.protocol
+    };
+
+
+    this.pushService.showFallbackNotification(
+      '🔍 Debug Information',
+      `Check the browser console (F12) for detailed debug information. Permission: ${Notification.permission}, Supported: ${('Notification' in window) ? 'Yes' : 'No'}`
+    );
+
+    if (Notification.permission === 'granted') {
+      try {
+        const testNotification = new Notification('🔍 Direct Browser Test', {
+          body: 'This is a direct browser notification test - no service involved',
+          tag: 'debug-test',
+          requireInteraction: false
+        });
+
+        testNotification.onclick = () => {
+          testNotification.close();
+        };
+
+        testNotification.onerror = (error) => {
+          console.error('❌ Debug notification error:', error);
+        };
+
+        // Auto close after 3 seconds
+        setTimeout(() => {
+          testNotification.close();
+        }, 3000);
+
+      } catch (error) {
+        console.error('❌ Failed to create debug notification:', error);
+      }
+    }
   }
 }

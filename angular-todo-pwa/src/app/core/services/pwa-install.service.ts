@@ -45,7 +45,6 @@ export class PwaInstallService {
       // Prevent the mini-infobar from appearing on mobile
       e.preventDefault();
       
-      console.log('PWA install prompt available');
       this.installStatus.update(status => ({
         ...status,
         canInstall: true,
@@ -54,7 +53,6 @@ export class PwaInstallService {
     });
 
     window.addEventListener('appinstalled', () => {
-      console.log('PWA was installed');
       this.installStatus.update(status => ({
         ...status,
         isInstalled: true,
@@ -106,7 +104,6 @@ export class PwaInstallService {
     const currentStatus = this.installStatus();
     
     if (!currentStatus.canInstall || !currentStatus.promptEvent) {
-      console.log('Install prompt not available');
       return false;
     }
 
@@ -117,7 +114,6 @@ export class PwaInstallService {
       // Wait for the user to respond to the prompt
       const choiceResult = await currentStatus.promptEvent.userChoice;
       
-      console.log('User choice:', choiceResult.outcome);
       
       if (choiceResult.outcome === 'accepted') {
         this.installStatus.update(status => ({
